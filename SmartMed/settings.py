@@ -49,6 +49,11 @@ ALLOWED_HOSTS = [
     "0.0.0.0",  # Add this!
 ]
 
+CSRF_TRUSTED_ORIGINS = [
+    "https://smartmedproject.onrender.com",
+]
+
+
 
 
 # Application definition
