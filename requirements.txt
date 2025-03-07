@@ -12,3 +12,4 @@ sentence-transformers
 redis
 celery
 pandas
+opencv-python-headless
