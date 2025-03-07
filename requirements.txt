@@ -1,0 +1,13 @@
+numpy
+mediapipe
+channels
+daphne
+django>=4.0
+Pillow
+django-widget-tweaks
+gunicorn
+whitenoise
+python-dotenv
+sentence-transformers
+redis
+celery

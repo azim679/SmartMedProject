@@ -1,0 +1,35 @@
+{% extends "doctor_dashboard.html" %}
+{% block title %}Add Prescriptions{% endblock %}
+{%load static%}
+{%block head%}<link rel="stylesheet" href="{% static 'css/doctor_prescription.css' %}">{%endblock%}
+{%block content%}
+<section>
+    <div class="content">
+        <h2>Add Prescription</h2>
+        {% if messages %}
+        <div class="messages">
+            {% for message in messages %}
+            <div class="alert {{ message.tags }}">
+                {{ message }}
+            </div>
+            {% endfor %}
+        </div>
+        {% endif %}
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="btn">Submit</button>
+        </form>
+    </div>
+</section>
+<script>
+    setTimeout(function () {
+        const messages = document.querySelector('.messages');
+        if (messages) {
+            messages.style.transition = "opacity 0.3s ease";
+            messages.style.opacity = "0";
+            setTimeout(() => messages.remove(), 500); 
+        }
+    }, 3000);
+</script>
+{%endblock%}

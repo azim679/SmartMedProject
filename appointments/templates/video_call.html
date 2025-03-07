@@ -1,0 +1,819 @@
+{%load static%}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SmartMed Video Call</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #121212;
+            color: white;
+            text-align: center;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+        }
+
+        .video-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 90%;
+            max-width: 1400px;
+            height: 75vh;
+            border-radius: 10px;
+            overflow: hidden;
+            background: #222;
+            padding: 20px;
+            box-shadow: 0px 0px 15px rgba(255, 255, 255, 0.2);
+        }
+
+        video {
+            width: 100%;
+            height: 100%;
+            border-radius: 10px;
+            border: 3px solid #444;
+            background: black;
+            object-fit: cover;
+        }
+
+        #waitingMessage {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            color: white;
+            font-size: 20px;
+            background: rgba(0, 0, 0, 0.7);
+            padding: 10px 20px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+        }
+
+        button {
+            background-color: #ff4d4d;
+            color: white;
+            border: none;
+            padding: 12px 18px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: 0.3s;
+        }
+
+        button:hover {
+            opacity: 0.8;
+        }
+
+        .toggle-btn {
+            background-color: #007bff;
+        }
+
+        .end-call {
+            background-color: red;
+        }
+
+        /*media queries for bigger Screens */
+        @media (min-width: 1920px) {
+            .video-container {
+                width: 85%;
+                max-width: 2200px;
+                height: 75vh;
+                padding: 25px;
+            }
+
+            #waitingMessage {
+                font-size: 24px;
+                padding: 15px 30px;
+            }
+
+            button {
+                font-size: 20px;
+                padding: 14px 24px;
+            }
+        }
+
+        /*Ultra-Wide Screens media queries */
+        @media (min-width: 2560px) {
+            .video-container {
+                width: 90%;
+                max-width: 2600px;
+                height: 80vh;
+                padding: 30px;
+            }
+        }
+
+        #interpretationText {
+        background: rgba(0,0,0,0.7);
+        padding: 15px;
+        border-radius: 10px;
+        margin-top: 20px;
+        max-width: 1400px;
+        width: 90%;
+        }
+
+        #signSentence {
+            font-size: 24px;
+            margin: 10px 0;
+            min-height: 40px;
+            color: #00ff00;
+        }
+
+        .signlang-btn {
+            background-color: #8A2BE2;
+        }
+        .video-wrapper {
+        position: relative;
+        width: 48%;
+        height: 90%;
+        overflow: hidden; 
+        }
+
+        #signLanguageCanvas {
+            position: absolute;
+            left: 0;
+            top: 0;
+            pointer-events: none;
+            z-index: 2;  
+            border-radius: 10px;
+            border: 3px solid transparent;  
+            box-sizing: border-box;
+            background: transparent; 
+            mix-blend-mode: screen; 
+        }
+        .prediction-indicator {
+            background: rgba(0,0,0,0.7);
+            color: #00ff00;
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 20px;
+            margin-bottom: 15px;
+            text-align: center;
+            width: auto;
+
+        }
+
+
+        .button-container {
+            display: flex;
+            justify-content: center;
+            gap: 15px; 
+            margin-top: 10px;
+        }
+
+        .canvas-btn {
+            padding: 10px 15px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            opacity: 0.9;
+            transition: 0.3s;
+        }
+
+        .canvas-btn:hover {
+            opacity: 1;
+        }
+
+        .clear-btn {
+            background-color: red;
+            color: white;
+        }
+
+        .backspace-btn {
+            background-color: #007bff;
+            color: white;
+        }
+
+
+        @media (max-width: 1440px) {
+            #interpretationText {
+            padding: 5px;
+            margin-top: 5px;
+            max-width: 95%;
+            font-size: 14px; 
+        }
+
+        #signSentence {
+            font-size: 18px;
+            min-height: 2px;
+            margin: 8px 0;
+        }
+
+        #signLanguageCanvas {
+            border-width: 2px;
+        }
+
+        .prediction-indicator {
+            padding: 8px 15px;
+            font-size: 16px;
+            margin-bottom: 10px;
+        }
+
+        .signlang-btn {
+            padding: 10px 15px;
+            font-size: 16px;
+        }
+        }
+
+        .sign-help-modal {
+        display: none;
+        position: fixed;
+        z-index: 9999;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0,0,0,0.8);
+        }
+
+        .modal-content {
+            background-color: #222;
+            margin: 5% auto;
+            padding: 20px;
+            border-radius: 10px;
+            width: 80%;
+            max-width: 800px;
+            position: relative;
+        }
+
+        .close-modal {
+            position: absolute;
+            right: 20px;
+            top: 10px;
+            color: white;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .close-modal:hover {
+            color: #ff4d4d;
+        }
+
+        .sign-help-image {
+        width: 100%;
+        height: auto;
+        max-height: 70vh;
+        border-radius: 8px;
+        border: 2px solid #444;
+        }
+
+        .help-btn {
+            background-color: #4CAF50 !important;
+        }
+
+        /* Update button container spacing */
+        .button-container {
+            gap: 10px;
+        }
+    </style>
+    <!--Media pipe hands to track hands-->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/hands/hands.js"></script>
+    <!--Media pipe camera utility for real time camera capturing and tracking-->
+    <script src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js"></script>
+</head>
+<body>
+    <h2>Video Call</h2>
+
+    <!--Display local and remote video-->
+    <div class="video-container">
+        <div class="video-wrapper">
+            <video id="localVideo" autoplay muted></video>
+        </div>
+        <div class="video-wrapper">
+            <video id="remoteVideo" autoplay></video>
+            <div id="waitingMessage">Waiting for others to join...</div>
+        </div>
+    </div>
+    
+    <div id="interpretationText" {% if not is_doctor %}style="display: none;"{% endif %}>
+        <h3>Sign Language Interpretation:</h3>
+        <p id="signSentence">{% if is_doctor %}Waiting for patient's signs...{% endif %}</p>
+        <div id="signLanguageError" class="error-message"></div>
+        <div class="prediction-indicator" id="currentPrediction">
+            Current Letter: <span id="currentPredictionText"></span>
+        </div>
+
+        {% if not is_doctor %}
+        <div class="button-container">
+            <button id="clearSentenceBtn" class="canvas-btn clear-btn">Clear</button>
+            <button id="backspaceBtn" class="canvas-btn backspace-btn">Backspace</button>
+            <button id="helpBtn" class="canvas-btn help-btn">Sign Help</button>
+        </div>
+        {% endif %}
+
+
+    </div>
+    <!--Display drawing of hand on screen-->
+    <canvas id="signLanguageCanvas"></canvas>
+
+    <div class="controls">
+        <button id="muteBtn" class="toggle-btn">Mute Mic </button>
+        <button id="cameraBtn" class="toggle-btn">Turn Camera Off </button>
+        <button onclick="endCall()" class="end-call">End Call </button>
+        {% if not is_doctor %}
+        <button id="signLangBtn" class="toggle-btn signlang-btn">Start Sign Language Interpreter </button>
+        {% endif %}
+    </div>
+    <!--Modal for sign language help-->
+    <div id="signHelpModal" class="sign-help-modal">
+        <div class="modal-content">
+            <span class="close-modal">&times;</span>
+            
+            <img src="{% static 'images/signhelp.png' %}" 
+         alt="Sign Language Gesture Guide" 
+         class="sign-help-image">
+        </div>
+    </div>
+
+    <script>
+        //hand tracking results drawing
+        const canvas = document.getElementById('signLanguageCanvas')
+        const clearBtn = document.getElementById("clearSentenceBtn")
+        const backspaceBtn = document.getElementById("backspaceBtn")
+        const helpBtn = document.getElementById("helpBtn")
+        const closeModalBtn = document.querySelector(".close-modal")
+
+        //WebRTC and sign language variables
+        const ctx = canvas.getContext('2d')
+        const roomName = "{{ room_name }}"
+        //websocket connection for real time video 
+        const socket = new WebSocket(`ws://${window.location.host}/ws/appointment/${roomName}/`)
+        let videoWidth, videoHeight
+        let localStream, peerConnection
+        let isCaller = false
+        let isRemoteDescriptionSet = false
+        let iceCandidatesQueue = []
+        let offerSent = false
+        let interpreterActive = false
+        let signSentence = ""
+        let lastPrediction = null
+        let lastPredictionTime = 0
+        let confirmed = false
+        let hands = null
+
+        if (clearBtn && backspaceBtn && helpBtn && closeModalBtn) {
+            clearBtn.addEventListener("click", clearSignSentence)
+            backspaceBtn.addEventListener("click", backspaceSignSentence)
+            helpBtn.addEventListener("click", showHelpModal)
+            closeModalBtn.addEventListener("click", closeHelpModal)
+        }
+
+        function showHelpModal() {
+            document.getElementById('signHelpModal').style.display = 'block';
+        }
+        function closeHelpModal() {
+            document.getElementById('signHelpModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside (optional)
+        window.onclick = function(event) {
+            const modal = document.getElementById('signHelpModal');
+            if (event.target === modal) {
+                closeHelpModal();
+            }
+        }
+
+        //google stun server for webrtc 
+        const servers = {
+            iceServers: [{ urls: "stun:stun.l.google.com:19302" }]
+        }
+
+        //websocket being connected
+        socket.onopen = function () {
+            console.log("WebSocket Connected Successfully")
+        }
+
+        //handles messages
+        socket.onmessage = async function (event) {
+            const data = JSON.parse(event.data)
+            
+            //set iscaller is their role either caller or callee so this is doctor or user
+            if (data.role) {
+                isCaller = data.role === "caller"
+                console.log(`Assigned Role: ${isCaller ? "Caller" : "Callee"}`)
+
+                //createoffer when iscaller assigned
+                if (isCaller) {
+                    setTimeout(() => {
+                        if (!offerSent) {
+                            createOffer()
+                        }
+                    }, 2000)
+                }
+                //send offer if not sent already and callee requesting offer like doctor
+            } else if (data.type === "request_offer") {
+                if (isCaller && !offerSent) {
+                    createOffer()
+                }
+            } else if (data.offer) {
+                console.log("Received Offer")
+
+                if (!peerConnection) {
+                    initialisePeerConnection()
+                }
+
+                //sets remote description with received offer and process ICE candidates before setting it 
+                await peerConnection.setRemoteDescription(new RTCSessionDescription(data.offer))
+                isRemoteDescriptionSet = true
+                processStoredCandidates()
+
+                //send answer back to caller 
+                const answer = await peerConnection.createAnswer()
+                await peerConnection.setLocalDescription(answer)
+                socket.send(JSON.stringify({ answer: answer }))
+                
+                //receives answer from other user 
+            } else if (data.answer) {
+                console.log("Answer Received")
+
+                if (!peerConnection.currentRemoteDescription) {
+                    await peerConnection.setRemoteDescription(new RTCSessionDescription(data.answer))
+                    isRemoteDescriptionSet = true
+                    processStoredCandidates();
+                }
+            } else if (data.candidate) {
+                console.log("ICE Candidate Received")
+
+                //add ICE candidate to peer connection if connection is open 
+                if (peerConnection && (peerConnection.connectionState !== "closed")) {
+                    try {
+                        await peerConnection.addIceCandidate(new RTCIceCandidate(data.candidate))
+                    } catch (e) {
+                        console.error("Error adding ICE candidate:", e)
+                    }
+                }
+            }
+
+            //update the sign sentence with these texts
+            if (data.type === "sign_text") {
+            document.getElementById("signSentence").textContent = data.text
+                }
+            }
+
+            //retrieve oldest ICE candidate from queue and add them to WebRTC
+            function processStoredCandidates() {
+                while (iceCandidatesQueue.length) {
+                    let candidate = iceCandidatesQueue.shift()
+                    peerConnection.addIceCandidate(new RTCIceCandidate(candidate))
+                }
+            }
+
+            //initialise webrtc connection
+            async function initialisePeerConnection() {
+                if (peerConnection) return
+
+                console.log("Initialising WebRTC Peer Connection")
+                peerConnection = new RTCPeerConnection(servers)
+
+                //send ICE candidate to signalling server 
+                peerConnection.onicecandidate = function (event) {
+                    if (event.candidate && socket.readyState === WebSocket.OPEN) {
+                        socket.send(JSON.stringify({ candidate: event.candidate }))
+                    }
+                };
+
+                //retrieve media streams assign it display and remove waiting message
+                peerConnection.ontrack = function (event) {
+                    console.log("Remote Stream Received")
+                    document.getElementById("remoteVideo").srcObject = event.streams[0]
+
+                    // Hide waiting message when the other user joins
+                    document.getElementById("waitingMessage").style.display = "none"
+                };
+
+                if (localStream) {
+                    localStream.getTracks().forEach((track) => peerConnection.addTrack(track, localStream))
+                }
+            }
+
+            //send webrtc offer
+            async function createOffer() {
+                if (!peerConnection) initialisePeerConnection()
+
+                if (peerConnection.signalingState !== "stable" || offerSent) {
+                    console.warn("Connection is not stable.")
+                    return
+                }
+
+                console.log("Offer is being created");
+                const offer = await peerConnection.createOffer()
+                await peerConnection.setLocalDescription(offer)
+                socket.send(JSON.stringify({ offer: offer }))
+                offerSent = true
+            }
+
+            //retrieve microphone and camera of user
+            navigator.mediaDevices.getUserMedia({ video: true, audio: true }).then((stream) => {
+                document.getElementById("localVideo").srcObject = stream
+                localStream = stream
+
+                initialisePeerConnection()
+
+                if (isCaller) {
+                    setTimeout(() => {
+                        if (!offerSent) {
+                            createOffer()
+                        }
+                    }, 2000)
+                }
+            })
+
+            document.getElementById("muteBtn").addEventListener("click", function () {
+                localStream.getAudioTracks()[0].enabled = !localStream.getAudioTracks()[0].enabled;
+                this.textContent = localStream.getAudioTracks()[0].enabled ? "Mute Mic " : "Unmute Mic "
+            })
+
+            document.getElementById("cameraBtn").addEventListener("click", function () {
+                localStream.getVideoTracks()[0].enabled = !localStream.getVideoTracks()[0].enabled;
+                this.textContent = localStream.getVideoTracks()[0].enabled ? "Turn Camera Off " : "Turn Camera On ";
+            });
+
+            //end call by stopping websocket, camera and microphone
+            function endCall() {
+                if (peerConnection) peerConnection.close();
+                if (socket) socket.close();
+                if (localStream) {
+                    localStream.getTracks().forEach((track) => track.stop());
+                }
+                window.location.href = "{% url 'leave_video_call' %}";
+            }
+
+            
+
+            // Initialise MediaPipe Hands
+            function initialiseMediaPipe() {
+                hands = new window.Hands({
+                    locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/hands/${file}`
+                });
+
+                //options for how hand is tracked
+                hands.setOptions({
+                    maxNumHands: 1,
+                    modelComplexity: 1,
+                    minDetectionConfidence: 0.8,
+                    minTrackingConfidence: 0.8
+                });
+
+                //process the landmarks for hands
+                hands.onResults(processSignLanguageResults);
+            }
+
+            
+            document.getElementById("signLangBtn").addEventListener("click", function() {
+                interpreterActive = !interpreterActive
+                document.getElementById("interpretationText").style.display = interpreterActive ? "block" : "none"
+                this.textContent = interpreterActive ? "Stop Interpreter " : "Start Sign Language Interpreter "
+                
+                //reset sign sentence when button is toggled
+                if (interpreterActive) {
+                    signSentence = ""
+                    document.getElementById("signSentence").textContent = ""
+                    initialiseSignLanguageProcessing()
+                } else {
+                    stopSignLanguageProcessing()
+                }
+            });
+
+            async function initialiseSignLanguageProcessing() {
+                if (!hands) initialiseMediaPipe()
+                
+                const videoElement = document.getElementById('localVideo')
+
+                //canvas used to process frames of hand
+                const canvasElement = document.createElement('canvas')
+                const canvasCtx = canvasElement.getContext('2d')
+                let processing = false;  
+                
+                //continous video frame processing
+                async function processFrame() {
+                    if (!interpreterActive || processing) return;
+                    processing = true
+                    
+                    try {
+                        canvasElement.width = videoElement.videoWidth
+                        canvasElement.height = videoElement.videoHeight
+
+                        //video frame drawn on canvas and send to mediapipe for hand tracking
+                        canvasCtx.drawImage(videoElement, 0, 0, canvasElement.width, canvasElement.height)
+                        await hands.send({ image: canvasElement })
+                    } catch (error) {
+                        showSignLanguageError("Frame processing error: " + error.message)
+                    } finally {
+                        processing = false
+                        requestAnimationFrame(processFrame)
+                    }
+                }
+                
+                processFrame()
+            }
+
+            async function processSignLanguageResults(results) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height)
+                
+                try {
+                    const videoElement = document.getElementById('localVideo')
+                    const videoWrapper = document.querySelector('.video-wrapper:first-child')
+                    const videoRect = videoWrapper.getBoundingClientRect()
+
+                    //canvas dimensions updated to match video display
+                    canvas.width = videoRect.width
+                    canvas.height = videoRect.height
+                    canvas.style.width = `${videoRect.width}px`
+                    canvas.style.height = `${videoRect.height}px`
+                    canvas.style.left = `${videoRect.left}px`
+                    canvas.style.top = `${videoRect.top}px`
+
+                    //checks if hand landmarks detected
+                    if (results.multiHandLandmarks) {
+                        for (const landmarks of results.multiHandLandmarks) {
+
+                            // Calculate hand landmarks and bounding box
+                            const xCoords = landmarks.map(l => l.x)
+                            const yCoords = landmarks.map(l => l.y)
+                            const xMin = Math.min(...xCoords)
+                            const xMax = Math.max(...xCoords)
+                            const yMin = Math.min(...yCoords)
+                            const yMax = Math.max(...yCoords)
+                            
+                            // Draw bounding box
+                            ctx.strokeStyle = '#00ff00'//green
+                            ctx.lineWidth = 2
+                            ctx.strokeRect(
+                                xMin * videoRect.width - 10,
+                                yMin * videoRect.height - 10,
+                                (xMax - xMin) * videoRect.width + 20,
+                                (yMax - yMin) * videoRect.height + 20
+                            );
+
+                            // Draw hand landmarks and connections
+                            ctx.strokeStyle = '#00ff00'
+                            ctx.fillStyle = '#ff206e'//pink
+                            landmarks.forEach(landmark => {
+                                ctx.beginPath()
+                                ctx.arc(
+                                    landmark.x * videoRect.width,
+                                    landmark.y * videoRect.height,
+                                    5, 0, 2 * Math.PI
+                                )
+                                ctx.fill()
+                            });
+
+                            // Draw connections between landamrks
+                            (window.Hands.HAND_CONNECTIONS || [
+                                [0,1],[1,2],[2,3],[3,4],         // Thumb
+                                [0,5],[5,6],[6,7],[7,8],         // Index
+                                [0,9],[9,10],[10,11],[11,12],    // Middle
+                                [0,13],[13,14],[14,15],[15,16],  // Ring
+                                [0,17],[17,18],[18,19],[19,20]   // Pinky
+                            ]).forEach(([start, end]) => {
+                                ctx.beginPath()
+                                ctx.moveTo(
+                                    landmarks[start].x * videoRect.width,
+                                    landmarks[start].y * videoRect.height
+                                );
+                                ctx.lineTo(
+                                    landmarks[end].x * videoRect.width,
+                                    landmarks[end].y * videoRect.height
+                                )
+                                ctx.stroke()
+                            });
+
+                            // Get prediction data from extracted landmarks
+                            const data_aux = landmarks.flatMap(landmark => [landmark.x, landmark.y])
+                            if (data_aux.length >= 42) {
+                                const sliced_data = data_aux.slice(0, 42)
+                                
+                                try {
+                                    // send landmark data to views
+                                    const response = await fetch('/appointments/sign_language/predict/', {
+                                        method: 'POST',
+                                        headers: {
+                                            'Content-Type': 'application/json',
+                                            'X-CSRFToken': getCookie('csrftoken'),
+                                        },
+                                        body: JSON.stringify({ landmarks: sliced_data })
+                                    });
+
+                                    if (!response.ok) {
+                                        const errorData = await response.json()
+                                        showSignLanguageError(`Server error: ${errorData.error}`)
+                                        return;
+                                    }
+
+                                    const data = await response.json()
+                                    const prediction = data.prediction.toLowerCase()
+                                    
+                                    // Update sign language text display
+                                    updateSignSentence(prediction)
+                                } catch (fetchError) {
+                                    showSignLanguageError("Prediction failed: " + fetchError.message)
+                                }
+                            }
+                        }
+                    }
+                } catch (error) {
+                    showSignLanguageError("Processing error: " + error.message)
+                }
+            }
+            // gets csrf function to prevent unauthorised access
+            function getCookie(name) {
+                let cookieValue = null;
+                if (document.cookie && document.cookie !== '') {
+                    const cookies = document.cookie.split(';')
+                    for (let i = 0; i < cookies.length; i++) {
+                        const cookie = cookies[i].trim()
+                        if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                            cookieValue = decodeURIComponent(cookie.substring(name.length + 1))
+                            break
+                        }
+                    }
+                }
+                return cookieValue
+            }
+
+            //creates sign sentence once prediction is stable for 3 seconds
+            function updateSignSentence(prediction) {
+                const currentTime = Date.now()
+                
+                if (prediction !== lastPrediction) {
+                    lastPrediction = prediction;
+                    lastPredictionTime = currentTime;
+                    confirmed = false;
+                    // Update current prediction display
+                    document.getElementById('currentPredictionText').textContent = prediction.toUpperCase()
+                    //if same prediction detected and not confirmed wait 3 seconds and append it 
+                } else if (!confirmed && (currentTime - lastPredictionTime) >= 3000) {
+                    signSentence += prediction === "space" ? " " : prediction
+                    document.getElementById("signSentence").textContent = signSentence
+                    socket.send(JSON.stringify({
+                        type: "sign_text",
+                        text: signSentence,
+                        sender: 'local'
+                    }));
+                    confirmed = true;
+                    // Clear current prediction display 
+                    document.getElementById('currentPredictionText').textContent = ''
+                }
+            }
+
+            function showSignLanguageError(message) {
+                const errorDiv = document.getElementById("signLanguageError")
+                errorDiv.textContent = message
+                setTimeout(() => errorDiv.textContent = "", 5000)
+            }
+
+            //clears sign sentence when button pressed
+            function clearSignSentence() {
+                signSentence = ""
+                document.getElementById("signSentence").textContent = ""
+                socket.send(JSON.stringify({
+                    type: "sign_text",
+                    text: "",
+                    sender: 'local'
+                }));
+            }
+
+            //removes previous letter from sentence once button pressed
+            function backspaceSignSentence() {
+                if (signSentence.length > 0) {
+                    signSentence = signSentence.slice(0, -1);
+                    document.getElementById("signSentence").textContent = signSentence
+                    socket.send(JSON.stringify({
+                        type: "sign_text",
+                        text: signSentence,
+                        sender: 'local'
+                    }));
+                }
+            }
+
+            function stopSignLanguageProcessing() {
+                signSentence = ""
+                lastPrediction = null
+                confirmed = false
+                document.getElementById("signSentence").textContent = ""
+                socket.send(JSON.stringify({
+                    type: "sign_text",
+                    text: "",
+                    sender: 'local'
+                }));
+            }
+
+            // Initialise media pipe when page loads
+            initialiseMediaPipe();
+    </script>
+</body>
+</html>

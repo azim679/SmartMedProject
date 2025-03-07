@@ -1,0 +1,241 @@
+{% extends "dashboardindex.html" %}
+{% load static %}
+
+{% block content %}
+
+<section class="health-data">
+    <div class="health-data-header">
+        <h2>Today's Health Data</h2>
+    </div>
+
+    <div class="health-data-grid">
+        <div class="health-item">
+            <p>Blood Pressure</p>
+            <p><strong>{{ health_data.blood_pressure_systolic}}/{{ health_data.blood_pressure_diastolic}} mmHg</strong></p>
+        </div>
+        <div class="health-item">
+            <p>Heart Rate</p>
+            <p><strong>{{ health_data.heart_rate}} bpm</strong></p>
+        </div>
+        <div class="health-item">
+            <p>Weight</p>
+            <p><strong>{{ health_data.weight}} kg</strong></p>
+        </div>
+        <div class="health-item">
+            <p>BMI</p>
+            <p><strong>{{ health_data.bmi}}</strong></p>
+        </div>
+        <div class="health-item">
+            <p>Activity Level</p>
+            <p><strong>{{ health_data.activity_level}}</strong></p>
+        </div>
+        <div class="health-item">
+            <p>Blood Glucose</p>
+            <p><strong>{{ health_data.blood_glucose}} mg/dL</strong></p>
+        </div>
+    </div>
+</section>
+
+
+<section class="appointments-section">
+    <h2>Todays Appointments</h2>
+    <div class="appointments-container">
+        {% if todays_appointments %}
+        {% for appointment in todays_appointments %}
+        <div class="appointment-card">
+            <div class="appointment-card-left">
+                <img src="{{ appointment.doctor.profile.profile_image.url }}" alt="{{ appointment.doctor.username }}'s Image">
+            </div>
+            <div class="appointment-card-middle">
+                <h3>{{ appointment.doctor.username }}</h3>
+                <p class="schedule">Monday - Friday | 9:00AM - 5:00PM</p>
+            </div>
+            <div class="appointment-card-right">
+                <p class="appointment-date">{{ appointment.date|date:"F j, Y" }}</p>
+                <p class="appointment-time">
+                    {{ appointment.start_time|time:"h:i A" }} - {{ appointment.end_time|time:"h:i A" }}
+                </p>
+                <p class="duration">{{ appointment.duration }} Min</p>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p>You have no appointments today.</p>
+        {% endif %}
+    </div>
+</section>
+
+<section class="charts-section">
+    <h2>Health Trends Over Last 10 Days</h2>
+
+    <div class="charts-grid">
+        <div class="chart-container">
+            <h3>Blood Pressure</h3>
+            <canvas id="bloodPressureChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Heart Rate</h3>
+            <canvas id="heartRateChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Weight</h3>
+            <canvas id="weightChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>BMI</h3>
+            <canvas id="bmiChart"></canvas>
+        </div>
+        <div class="chart-container">
+            <h3>Blood Glucose</h3>
+            <canvas id="bloodGlucoseChart"></canvas>
+        </div>
+    </div>
+</section>
+<!-- Floating Chat Icon -->
+<div id="chat-icon" onclick="toggleChat()">
+    <img src="{% static 'images/chatboticon.png'%}">
+</div>
+
+<!-- Chatbot Window -->
+<div id="chat-container">
+    <div id="chat-header">AI Chatbot <span onclick="toggleChat()">&times;</span></div>
+    <div id="chat-messages"></div>
+    <input type="text" id="user-input" placeholder="Ask me anything..." onkeypress="sendMessage(event)">
+</div>
+
+<!--Renders the graphs-->
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+<!--Script runs once HTML code loaded-->
+<script>
+    //creates bar charts for each health data
+    document.addEventListener("DOMContentLoaded", function() {
+        const bloodPressureChart = document.getElementById('bloodPressureChart').getContext('2d');
+        const heartRateChart = document.getElementById('heartRateChart').getContext('2d');
+        const weightChart = document.getElementById('weightChart').getContext('2d');
+        const bmiChart = document.getElementById('bmiChart').getContext('2d');
+        const bloodGlucoseChart = document.getElementById('bloodGlucoseChart').getContext('2d');
+
+        const healthDates = JSON.parse('{{ health_dates|safe }}');
+
+        new Chart(bloodPressureChart, {
+            type: 'bar',
+            data: {
+                labels: healthDates,
+                datasets: [
+                    {
+                        label: 'Systolic (mmHg)',
+                        data: JSON.parse('{{ blood_pressure_systolic_data|safe }}'),
+                        backgroundColor: 'red'
+                    },
+                    {
+                        label: 'Diastolic (mmHg)',
+                        data: JSON.parse('{{ blood_pressure_diastolic_data|safe }}'),
+                        backgroundColor: 'orange'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        new Chart(heartRateChart, {
+            type: 'bar',
+            data: {
+                labels: healthDates,
+                datasets: [
+                    {
+                        label: 'Heart Rate (BPM)',
+                        data: JSON.parse('{{ heart_rate_data|safe }}'),
+                        backgroundColor: 'blue'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        new Chart(weightChart, {
+            type: 'bar',
+            data: {
+                labels: healthDates,
+                datasets: [
+                    {
+                        label: 'Weight (kg)',
+                        data: JSON.parse('{{ weight_data|safe }}'),
+                        backgroundColor: 'cyan'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        new Chart(bmiChart, {
+            type: 'bar',
+            data: {
+                labels: healthDates,
+                datasets: [
+                    {
+                        label: 'BMI',
+                        data: JSON.parse('{{ bmi_data|safe }}'),
+                        backgroundColor: 'purple'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+
+        new Chart(bloodGlucoseChart, {
+            type: 'bar',
+            data: {
+                labels: healthDates,
+                datasets: [
+                    {
+                        label: 'Blood Glucose (mg/dL)',
+                        data: JSON.parse('{{ blood_glucose_data|safe }}'),
+                        backgroundColor: 'green'
+                    }
+                ]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false
+            }
+        });
+    });
+
+    //displaying chatbot
+    function toggleChat() {
+        let chatBox = document.getElementById("chat-container");
+            if (window.getComputedStyle(chatBox).display === "none") {
+            chatBox.style.display = "block";
+            } else {
+            chatBox.style.display = "none";
+            }
+    }
+    //user inputs message and presses enter for response from backend using chatbot get request 
+    function sendMessage(event) {
+        if (event.key === "Enter") {
+            let userInput = document.getElementById("user-input").value;
+            document.getElementById("chat-messages").innerHTML += `<p><strong>You:</strong> ${userInput}</p>`;
+            document.getElementById("user-input").value = "";
+            fetch(`/dashboard/chatbot/?query=${encodeURIComponent(userInput)}`)
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById("chat-messages").innerHTML += `<p><strong>Chatbot:</strong> ${data.response}</p>`;
+                });
+        }
+    }
+</script>
+
+{% endblock %}

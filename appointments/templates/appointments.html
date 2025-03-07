@@ -1,0 +1,243 @@
+{% extends "dashboardindex.html" %}
+{% block title %}Appointments{% endblock %}
+{% load static %}
+{% block head %}
+<link rel="stylesheet" href="{% static 'css/appointments.css' %}">
+{% endblock %}
+{% block content %}
+
+<section class="appointments-section">
+    <h2>Available Doctors</h2>
+    <div class="appointments-container">
+        {% for doctor in doctors %}
+        <div class="appointment-card">
+            <div class="appointment-card-left">
+                <img src="{{doctor.profile.profile_image.url}}" alt="{{doctor.username}}">
+            </div>
+            <div class="appointment-card-middle">
+                <h3>{{ doctor.username|capfirst }}</h3>
+                <p class="schedule">Monday - Friday | 9:00AM - 5:00PM</p>
+            </div>
+            <div class="appointment-card-right">
+                <button class="book-btn book-appointment-btn" data-doctor-id="{{ doctor.id }}">
+                    Book Appointment
+                </button>
+            </div>
+        </div>
+        {% empty %}
+        <p>No doctors available.</p>
+        {% endfor %}
+    </div>
+</section>
+
+{% if messages %}
+<div class="messages">
+    {% for message in messages %}
+    <div class="alert alert-{{ message.tags }}">
+        {{ message }}
+    </div>
+    {% endfor %}
+</div>
+{% endif %}
+
+
+<div id="modal-overlay" class="modal-overlay"></div>
+
+<div class="modal {% if form.errors %}open{% endif %}" id="appointment-modal">
+    <div class="modal-content">
+        <span class="close-modal" id="close-modal">&times;</span>
+        <h2>Book Appointment</h2>
+        <form method="post">
+            {% csrf_token %}
+            <input type="hidden" id="doctorIdInput" name="doctor_id" value="{{ doctor_id|default:'' }}">
+            {{ form.as_p }}
+            <button type="submit" class="btn">Confirm Appointment</button>
+        </form>
+    </div>
+</div>
+
+<section class="appointments-section">
+    <h2>Upcoming Appointments</h2>
+    <div class="appointments-container">
+        {% if upcoming_appointments %}
+        {% for appointment in upcoming_appointments %}
+        <div class="appointment-card">
+            <div class="appointment-card-left">
+                <img src="{{ appointment.doctor.profile.profile_image.url }}" alt="{{ appointment.doctor.username }}'s Image">
+            </div>
+            <div class="appointment-card-middle">
+                <h3>{{ appointment.doctor.username }}</h3>
+                <p class="schedule">Monday - Friday | 9:00AM - 5:00PM</p>
+            </div>
+            <div class="appointment-card-right">
+                <p class="appointment-date">{{ appointment.date|date:"F j, Y" }}</p>
+                <p class="appointment-time">
+                    {{ appointment.start_time|time:"h:i A" }} - {{ appointment.end_time|time:"h:i A" }}
+                </p>
+                <p class="duration">{{ appointment.duration }} Min</p>
+                <span class="status scheduled">SCHEDULED</span>
+                <div class="appointment-actions">
+                    <form method="post" action="{% url 'cancel_appointment' appointment.id %}">
+                        {% csrf_token %}
+                        <button type="submit" class="cancel-btn">Cancel</button>
+                    </form>
+                    <button class="reschedule-btn" data-appointment-id="{{ appointment.id }}">Reschedule</button>
+                    {% if appointment.date == today and appointment.time <= now.time %}
+                    <a href="{% url 'video_call' appointment.id %}" class="join-btn">
+                        Join Appointment
+                    </a>
+                {% endif %}
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p>You have no upcoming appointments.</p>
+        {% endif %}
+    </div>
+</section>
+
+<div class="modal" id="reschedule-modal">
+    <div class="modal-content">
+        <span class="close-modal" id="close-reschedule-modal">&times;</span>
+        <h2>Reschedule Appointment</h2>
+        <form id="reschedule-form" method="post" action="{% url 'reschedule_appointment' %}">
+            {% csrf_token %}
+            <input type="hidden" id="reschedule-appointment-id" name="appointment_id">
+            
+            <label for="reschedule-date">New Date:</label>
+            <input type="date" id="reschedule-date" name="date" class="form-control" required>
+
+            <label for="reschedule-time">New Time:</label>
+            <select id="reschedule-time" name="time" class="form-control" required>
+                {% for time, label in TIME_CHOICES %}
+                    <option value="{{ time }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+
+            <label for="reschedule-duration">New Duration:</label>
+            <select id="reschedule-duration" name="duration" class="form-control" required>
+                {% for minutes, label in DURATION_CHOICES %}
+                    <option value="{{ minutes }}">{{ label }}</option>
+                {% endfor %}
+            </select>
+
+            <button type="submit" class="btn">Submit</button>
+        </form>
+    </div>
+</div>
+
+
+<section class="appointments-section">
+    <h2>Past Appointments</h2>
+    <div class="appointments-container">
+        {% if past_appointments %}
+        {% for appointment in past_appointments %}
+        <div class="appointment-card past">
+            <div class="appointment-card-left">
+                <img src="{{ appointment.doctor.profile.profile_image.url }}" alt="{{ appointment.doctor.username }}'s Image">
+            </div>
+            <div class="appointment-card-middle">
+                <h3>{{ appointment.doctor.username }}</h3>
+                <p class="schedule">Monday - Friday | 9:00AM - 5:00PM</p>
+            </div>
+            <div class="appointment-card-right">
+                <p class="appointment-date">{{ appointment.date|date:"F j, Y" }}</p>
+                <p class="appointment-time">
+                    {{ appointment.start_time|time:"h:i A" }} - {{ appointment.end_time|time:"h:i A" }}
+                </p>
+                <p class="duration">{{ appointment.duration }} Min</p>
+                <span class="status completed">COMPLETED</span>
+            </div>
+        </div>
+        {% endfor %}
+        {% else %}
+        <p>You have no past appointments.</p>
+        {% endif %}
+    </div>
+</section>
+
+<script>
+    document.addEventListener('DOMContentLoaded', () => {
+        const bookButtons = document.querySelectorAll('.book-appointment-btn');
+        const appointmentModal = document.getElementById('appointment-modal');
+        const overlay = document.getElementById('modal-overlay');
+        const closeModal = document.getElementById('close-modal');
+        const doctorIdInput = document.getElementById('doctorIdInput');
+        const successMessage = document.querySelector('.success-message');
+        const modalForm = appointmentModal.querySelector('form');
+        // const hasErrors = appointmentModal.classList.contains('open');
+        const rescheduleButtons = document.querySelectorAll('.reschedule-btn');
+        const rescheduleModal = document.getElementById('reschedule-modal');
+        const closeRescheduleModal = document.getElementById('close-reschedule-modal');
+        const rescheduleForm = document.getElementById('reschedule-form');
+        const appointmentIdInput = document.getElementById('reschedule-appointment-id');
+        const messageContainer = document.querySelector('.messages');
+
+
+        // Open modal
+        bookButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                const doctorId = e.target.getAttribute('data-doctor-id');
+                doctorIdInput.value = doctorId;
+                appointmentModal.style.display = 'block';
+                overlay.style.display = 'block';
+                if (successMessage) {
+                    successMessage.style.display = 'none';
+                }
+            });
+        });
+ 
+        // Close modal
+        closeModal.addEventListener('click', () => {
+            appointmentModal.style.display = 'none';
+            overlay.style.display = 'none';
+        });
+
+        overlay.addEventListener('click', () => {
+            appointmentModal.style.display = 'none';
+            rescheduleModal.style.display = 'none';
+            overlay.style.display = 'none';
+        });
+
+        // // Keep modal open if errors
+        // if (hasErrors) {
+        //     appointmentModal.style.display = 'block';
+        //     overlay.style.display = 'block';
+        // }
+
+        //populates modal with appointment ID
+        rescheduleButtons.forEach(button => {
+            button.addEventListener('click', (e) => {
+                e.preventDefault();
+                const appointmentId = button.getAttribute('data-appointment-id');
+                appointmentIdInput.value = appointmentId;
+                rescheduleModal.style.display = 'block';
+                overlay.style.display = 'block';
+            });
+        });
+
+        closeRescheduleModal.addEventListener('click', () => {
+            rescheduleModal.style.display = 'none';
+            overlay.style.display = 'none';
+        });
+
+        window.addEventListener('click', (e) => {
+            if (e.target === rescheduleModal) {
+                rescheduleModal.style.display = 'none';
+                overlay.style.display = 'none';
+            }
+        });
+        if (messageContainer) {
+            setTimeout(() => {
+                messageContainer.classList.add('fade-out');
+                setTimeout(() => {
+                    messageContainer.style.display = 'none';
+                }, 500); 
+            }, 2000); 
+        }
+    });
+</script>
+
+{% endblock %}

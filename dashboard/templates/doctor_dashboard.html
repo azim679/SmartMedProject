@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard{% endblock %}</title>
+    {%block head%}<link rel="stylesheet" href="{% static 'css/doctor_dashboard.css' %}">{%endblock%}
+</head>
+<body>
+    <div class="main-container">
+        <nav class="sidebar">
+            <div class="sidebar-logo">
+                <h2>
+                    <img src="{% static 'images/whitelogo.png' %}" alt="SmartMed Logo" class="logo">
+                    SmartMed
+                </h2>
+            </div>
+            <ul class="sidebar-links">
+                <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li><a href="{% url 'doctor_appointments' %}">Appointments</a></li>
+                <li><a href="{% url 'add_prescription' %}">Prescriptions</a></li>
+            </ul>
+            <div class="sidebar-logout">
+                <form action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-button">Logout</button>
+                </form>
+            </div>
+        </nav>
+        <div class="content">
+            <header class="dashboard-header">
+                <h1>Welcome, {{ user.username|capfirst }}</h1>
+            </header>
+            {% block content%}
+            <section class="appointments-section">
+                <h2>Todays Appointments</h2>
+                <div class="appointments-container">
+                    {% if todays_appointments %}
+                    {% for appointment in todays_appointments %}
+                    <div class="appointment-card">
+                        <div class="appointment-card-middle">
+                            <h3>Patient: {{ appointment.user.get_full_name }}</h3>
+                            <p class="schedule">Date: {{ appointment.date|date:"F j, Y" }}</p>
+                            <p class="schedule">Time: {{ appointment.start_time|time:"h:i A" }} - {{ appointment.end_time|time:"h:i A" }}</p>
+                        </div>
+                        <div class="appointment-card-right">
+        
+                        </div>
+                    </div>
+                    {% endfor %}
+                    {% else %}
+                    <p>You have no appointments today.</p>
+                    {% endif %}
+                </div>
+            </section>
+        </div>
+    </div>
+    {%endblock%}
+</body>
+</html>

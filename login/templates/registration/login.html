@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{%load static%}
+{% block title %}Login{% endblock %}
+{% block content %}
+<div class="login-page">
+    <div class="login-container">
+        <div class="login-image">
+            <img src="{% static 'images/login-image.jpg' %}" alt="Login Image">
+            <div class="image-overlay">
+                <h1>
+                    <img src="{% static 'images/logos.jpg' %}" alt="SmartMed Logo" class="logo">
+                    SmartMed
+                </h1>
+            </div>
+        </div>
+
+        <div class="login-form">
+            <div class="form-header">
+                <h2>Welcome!</h2>
+                <p>Login to your account</p>
+            </div>
+            <form method="post" action="{% url 'login' %}?next={% url 'dashboard' %}">
+                {% csrf_token %}
+                <div class="form-fields">
+                    {{form.as_p}}
+                </div>
+                <a href="{% url 'password_reset' %}" class="forgot-password">I've forgotten my password</a>
+                <button type="submit" class="login-button">Log in</button>
+            </form>
+            <div class="signup-link">
+                <p>Don’t have an account? <a href="{% url 'registration' %}">Sign Up</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

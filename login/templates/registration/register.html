@@ -1,0 +1,36 @@
+{% extends "base.html" %}
+{% load static%}
+{% block title %}Register{% endblock %}
+{% block content %}
+<div class="login-page">
+    <div class="login-container">
+        
+        <div class="login-image">
+            <img src="{% static 'images/login-image.jpg' %}" alt="Register Image">
+            <div class="image-overlay">
+                <h1>
+                    <img src="{% static 'images/logos.jpg' %}" alt="SmartMed Logo" class="logo">
+                    SmartMed
+                </h1>
+            </div>
+        </div>
+
+        <div class="login-form">
+            <div class="form-header">
+                <h2>Welcome!</h2>
+                <p>Create your account</p>
+            </div>
+            <form method="post" action="{% url 'registration' %}">
+                {% csrf_token %}
+                <div class="form-fields">
+                    {{ form.as_p }}
+                </div>
+                <button type="submit" class="login-button">Register</button>
+            </form>
+            <div class="signup-link">
+                <p>Already have an account? <a href="{% url 'login' %}">Login</a></p>
+            </div>
+        </div>
+    </div>
+</div>
+{%endblock%}

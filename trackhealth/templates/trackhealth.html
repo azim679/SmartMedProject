@@ -1,0 +1,364 @@
+{% extends "dashboardindex.html" %}
+{% block title %}Track Health{% endblock %}
+{%load static%}
+{%block head%}<link rel="stylesheet" href="{% static 'css/trackhealth.css' %}">{%endblock%}
+{% block content %}
+
+<section class="date-selector">
+    <h2>Filter Date</h2>
+    <form method="get" action="">
+        <label for="date">Select Date:</label>
+        <input type="date" id="date" name="date" value="{{ selected_date }}">
+        <button type="submit" class="btn">Submit</button>
+    </form>
+</section>
+
+<section class="health-data">
+    <div class="health-data-header">
+        <h2>Health Data</h2>
+        <button class="add-data-btn" id="add-data-btn">Add Data</button>
+    </div>
+
+    <div class="modal {% if form.errors %}open{% endif %}" id="add-data-modal">
+        <div class="modal-content">
+            <span class="close-modal" id="close-modal">&times;</span>
+            <h2>Add Health Data</h2>
+            <form method="post" action="">
+                {% csrf_token %}
+                {{ form.as_p }}
+                <button type="submit" class="btn">Submit</button>
+            </form>
+        </div>
+    </div>
+    {% if success_message %}
+    <div class="success-message">
+        <p>{{ success_message }}</p>
+    </div>
+    {% endif %}
+
+    {% if health_data %}
+    <div class="health-data-grid">
+        <div class="health-item">
+            <p>Blood Pressure</p>
+            <p><strong>{{ health_data.blood_pressure_systolic }}/{{ health_data.blood_pressure_diastolic }}
+                    mmHg</strong></p>
+        </div>
+        <div class="health-item">
+            <p>Heart Rate</p>
+            <p><strong>{{ health_data.heart_rate }} bpm</strong></p>
+        </div>
+        <div class="health-item">
+            <p>Weight</p>
+            <p><strong>{{ health_data.weight }} kg</strong></p>
+        </div>
+        <div class="health-item">
+            <p>Height</p>
+            <p><strong>{{ health_data.height }} m</strong></p>
+        </div>
+        <div class="health-item">
+            <p>BMI</p>
+            <p><strong>{{ health_data.bmi }}</strong></p>
+        </div>
+        <div class="health-item">
+            <p>Activity Level</p>
+            <p><strong>{{ health_data.activity_level }}</strong></p>
+        </div>
+        <div class="health-item">
+            <p>Blood Glucose</p>
+            <p><strong>{{ health_data.blood_glucose }} mg/dL</strong></p>
+        </div>
+    </div>
+    {% else %}
+    <p>No health data available. Please add your details.</p>
+    {% endif %}
+</section>
+{% if health_data %}
+<section>
+    <div class="health-tips-header">
+    <h2>Personalized Health Tips</h2>
+    </div>
+    <div class="health-tips">
+
+        <div class="tip">
+            <h3>Heart Rate</h3>
+            {% if health_data.heart_rate == 0 %}
+                <p>Tip currently unavailable</p>
+            {% elif health_data.heart_rate < 50 %}
+                <p class="sub-title"><strong>Your heart rate is abnormally low. </strong><br>
+                    <h4>Effects of a low heart rate</h4>
+                <li>Dizziness - Your heart may not be pumping enough oxygen-rich blood which could cause you to feel faint leading to tiredness. This increases the risk of falls and injuries</li>
+                <li>Shortness of Breath - You may struggle to breath as your heart is not supplying your body with enough oxygen</li>
+                <li>Chest Pain - Blood flow may be reduced discomfort and pain in the chest</li>
+                <br>
+                <h4>Ways to improve heart rate</h4>
+                <li>Increase physical activity - Going on regular runs, walking or just going to the gym can help regulate your heart rate</li>
+                <li>Maintain a Healthy Diet and stay hydrated - Avoid consuming excessive amounts of salt and increase your consumption of potassium rich foods like bananas and spinach. Drink at least 2 litres of water daily to stay hydrated</li>
+                <li>Manage your stress and anxiety levels - Reduce stress levels through breathing exercises and yoga</li>
+                <li>Limit Alcohol and Caffeine Consumption - Excessive consumption could impact heart rhythm and cardiovascular health</li>
+                <br>
+                If you experience <strong>dizziness, fainting or extreme levels of fatigue</strong> please consult a doctor!!
+                </p>
+            {% elif health_data.heart_rate <= 100 %}
+                <p class="sub-title"><strong>Your heart rate is within a healthy range</strong><br>
+                    <h4>Ways to maintain your healthy heart rate</h4>
+                    <li>Get enough sleep - Poor amounts of sleep can badly affect your heart rate, so aim to get 7 to 9 hours everyday</li>
+                    <li>Exercise regularly - Activity like swimming, running or weight training can positively affect your heart by keeping it strong</li>
+                    <li>Stay hydrated - Drink at least 2 litres of water daily</li>
+                    <li>Monitor your heart rate regularly and consult your doctor if you notice unusual spikes or dips</li>
+                    <li>Eat a balanced diet - Ensure you have a balanced diet with greens, nuts, berries, fish and whole grains</li>
+            </p>
+            {% else %}
+                <p class="sub-title"><strong>Your heart rate is elevated. Although increases are normal during exercise, stress or excitement a constantly high heart rate is an issue</strong><br>
+                    <h4>Effects of a constantly high heart rate</h4>
+                    <li>Increase heart strain - Your heart has to work harder which leads to higher levels of fatigue and wear over time</li>
+                    <li>Dizziness - Oxygen flow to the head may be reduced </li>
+                    <h4>Ways to lower heart rate</h4>
+                    <li>Reduce Caffeine - This would usually increase heart rate so cut back on this</li>
+                    <li>Get enough sleep - Not enough sleep can keep heart rate elevated, 7 to 9 hours is the perfect amount.</li>
+                    <li>Exercise regularly - Regular exercise can strengthen the heart to beat more efficiently</li>
+                    <li>Stick to a Healthy Diet - Avoid processed foods, excessive sugars and salts which causes heart rate spikes. Eat potassium rich foods like spinach and bananas.</li>
+                    <li>Stay hydrated - Dehydration can lead to an elevated heart rate so drink at least 2 litres of water daily</li>
+                </p>
+            {% endif %}
+        </div>
+
+        <div class="tip">
+            <h3>BMI</h3>
+            {% if health_data.bmi == 0 %}
+                <p>Tip currently unavailable</p>
+            {% elif health_data.bmi < 18.5 %}
+                <p class="sub-title"><strong> BMI is below the normal range and classified as underweight.</strong><br>
+                    <h4>Effects of being underweight</h4>
+                    <li>Weak immune system - Your body may have difficulty in fighting off infections and illnesses</li>
+                    <li>Increased risk of fractures - Low body weight can reduce bone density which could lead to fractures</li>
+                    <li>Heart problems - Being underweight can lead to low blood pressure, slow heart rate and risk of cardiac problems</li>
+                    <li>Muscle Imbalance and weakness - Insufficient calorie and protein intake can lead to weak bones, making daily activities harder</li>
+                    <h4>Ways to increase BMI in a healthy manner</h4>
+                    <li>Increase calorie intake - Track your calories and ensure you eat at least 500 calories than your recommended amount for your BMI. This can be done through eating more nutrient dense foods like nuts, meats and dairy</li>
+                    <li>Consume Health fats - Good fats like oils, butter and fatty fish support brain and heart health</li>
+                    <li>Lift weights - Strength training like lifting weights can help build muscle mass instead of gaining fat</li>
+                    <li>Eat protein rich foods - Chicken, meats, eggs and fish helps build muscle and gain weight</li>
+                    <li>Eat more frequently - Have 5 to 6 small meals daily instead of 2 to 3 large ones</li><br>
+                    If you have any underlying health issues consult a doctor and gain more advice from them and a nutritionist
+
+
+                </p>
+            {% elif health_data.bmi <= 24.9 %}
+                <p class="sub-title"><strong>BMI is normal. Keep up the good work!</strong><br>
+                    <h4>Positive Effects of normal BMI</h4>
+                    <li>Lowers risk of Heart disease</li>
+                    <li>Stronger immune system</li>
+                    <li>Better energy levels</li>
+                    <li>Good Mental health</li>
+                    <h4>Ways to maintain healthy BMI</h4>
+                    <li>Stay Active - Do at least 150 minutes of exercise per week either it be weight training, jogging or walking</li>
+                    <li>Get enough sleep - Low amounts of sleep can lead to unhealthy cravings and weight fluctuations</li>
+                    <li>Manage stress levels - High stress can cause stress eating habits so yoga and breathing exercises can stop this from occuring</li>
+                    <li>Track your calories - Monitoring your calories is essential to ensure you don't over eat or under eat</li>
+                    <li>Eat a balanced diet - Although tracking calories is important, ensuring it includes lean proteins, whole grains, fruits and vegetables is much more important</li>
+                </p>
+            {% elif health_data.bmi <= 29.9 %}
+                <p class="sub-title"><strong>Your BMI is slightly high. Consider more physical activity.</strong>
+                <br>
+                <h4>Effects of overweight BMI</h4>
+                <li>Increased risk of heart disease - Extra weight could mean high blood pressure and heart problems</li>
+                <li>Increased risk of type 2 Diabetes - Increased risk of diabetes could mean insulin resistance</li>
+                <li>Joint Pain and mobility issues - Extra strain on knees, hips and ankles could lead to arthritis</li>
+                <li>Low energy levels - Everday activities may feel more tiring and increase fatigue levels</li>
+                <h4>Ways to reduce BMI in a healthy manner</h4>
+                <li>Strength training - Lift weights boost metabolism and helps build muscle</li>
+                <li>Change your diet - Consume lean proteins like chicken and eggs, fiber rich foods, healthy fats like olive oil and butter, while reducing added sugars and processed foods</li>
+                <li>Portion Control - Track your calories to prevent over eating</li>
+                <li>Stay hydrated - Drinking water can help reduce cravings and regulate metabolism</li>
+                </p>
+            {% else %}
+                <p class="sub-title"><strong>Your BMI indicates obesity. Consult a doctor.</strong></p>
+            {% endif %}
+        </div>
+
+        <div class="tip">
+            <h3>Blood Glucose</h3>
+            {% if health_data.blood_glucose == 0 %}
+                <p>Tip currently unavailable</p>
+            {% elif health_data.blood_glucose < 70 %}
+                <p class="sub-title"><strong>Your blood glucose is low</strong><br>
+                <h4>Effects of low blood glucose levels</h4>
+                <li>Dizziness - The brain depends on glucose meaning low levels could lead to dizziness</li>
+                <li>Blurred vision - Low glucose levels can affect vision causing blurriness</li>
+                <li>Sweating and possible seizures - Low blood glucose levels causes the body to release adrenaline which can lead to excessive sweating</li>
+                <li>High levels of fatigue - Low glucose levels can cause the body to struggle to produce energy</li>
+                <h4>Ways to increase blood glucose levels in a healthy manner</h4>
+                <li>Follow the 15-15 rule - Eat 15 grams of fast acting carbs like glucose tablets and wait 15 minutes to recheck your levels. You repeat this process if needed.</li>
+                <li>Reduce Alcohol Consumption - Blood sugar can crash when drinking alcohol on an empty stomach</li>
+                <li>Stay hydrated - Drink at least 2 litres of water throughout the day</li>
+                <li>Eat Balanced Meals - Consume proteins and carbohydrates like whole grains, eggs and nuts to prevent future drops</li>
+                </p>
+            {% elif health_data.blood_glucose <= 140 %}
+                <p class="sub-title"><strong>Your blood glucose is within a healthy range</strong><br>
+                <h4>Healthy Effects of normal blood glucose levels</h4>
+                <li>Clear thinking and focus</li>
+                <li>Reduced risk of diabetes and heart disease</li>
+                <li>Efficient Metabolism</li>
+                <li>Steady Energy Levels</li>
+                <h4>Ways to maintain healthy blood sugar levels</h4>
+                <li>Balanced Diet - Consume fibre, protein and healthy fats to prevent spikes</li>
+                <li>Avoid sugary drinks and processed foods - Can cause blood glucose levels to crash</li>
+                <li>Stay hydrated - Drinking sufficient amounts of water can help flush out excess glucose</li>
+                <li>Get enough sleep - Low sleep levels can lead to an imbalance of glucose levels</li>
+                </p>
+            {% elif health_data.blood_glucose <= 199 %}
+                <p class="sub-title"><strong>Your blood glucose is elevated</strong><br>
+                <h4>Effects of high blood glucose levels</h4>
+                <li>Nerve Damage - Prolonged sugar levels can cause numbness and damage to nerves</li>
+                <li>Increased Thirst - Your body tries to flush out any excess glucose through urine</li>
+                <li>Fatigue - High blood glucose can prevent cells from using glucose efficiently for energy levels</li>
+                <h4>Way to lower blood glucose levels safely</h4>
+                <li>Drink water - This can help flush out excess glucose through urine</li>
+                <li>Consumption of fibre rich foods - Fibre found in oats and vegetables can slow glucose absorption</li>
+                <li>Regular Exercise - Exercise can improve insulin sensitivity and lower blood sugar levels</li>
+                <li>Get enough sleep - Poor sleep can lead to increase blood glucose levels</li>
+                </p>
+
+            {% else %}
+                <p class="sub-title"><strong>Your blood glucose levels are abnormally high. Please contact your doctor ASAP.</strong></p>
+            {% endif %}
+        </div>
+
+        <div class="tip">
+            <h3>Blood Pressure</h3>
+            {% if health_data.blood_pressure_systolic == 0 or health_data.blood_pressure_diastolic == 0 %}
+                <p>Tip currently unavailable</p>
+            {% elif health_data.blood_pressure_systolic < 90 or health_data.blood_pressure_diastolic < 60 %}
+                <p class="sub-title"><strong>Your blood pressure is low</strong><br>
+                <h4>Effects of low blood pressure</h4>
+                <li>Rapid and shallow breathing</li>
+                <li>Weakness and fatigue - Muscles and organs are not receiving blood</li>
+                <li>Dizziness - Balance issues due to not enough blood reaching the brain</li>
+                <li>Fainting - Temporary unconsciousness</li>
+                <h4>Ways to safely increase blood pressure</h4>
+                <li>Increase intake of fluids - Dehydration causes blood volume to decrease</li>
+                <li>Increase potassium and B12 intake - Nutrient deficiencies can cause low blood pressure so eat bananas, spinach and eggs</li>
+                <li>Exercise regularly - Exercise improves blood circulation</li>
+                <li>Eat small frequent falls - Large meals can cause blood pressure to drop</li>
+                </p>
+            {% elif health_data.blood_pressure_systolic <= 120 and health_data.blood_pressure_diastolic <= 80 %}
+                <p class = "sub-title"><strong>Your blood pressure is normal</strong><br>
+                    <h4>Effects on healthy blood pressure</h4>
+                    <li>Lower risk of stroke</li>
+                    <li>Helps maintain memory, focus and cognitive performance</li>
+                    <li>Increased physical endurance</li>
+                    <li>Lower risk of Aneurysm</li>
+                    <h4>Ways to maintain healthy blood pressure levels</h4>
+                    <li>Balanced Diet - Consume vegetables fruits, health fats, whole grains and lean proteins</li>
+                    <li>Avoid smoking and excess alcohol - Both cause higher blood pressure and damages blood vessels</li>
+                    <li>Maintain Healthy Weight - Having normal BMI prevents strain on heart</li>
+                    <li>Reduce intake of salt - Excessive amounts of salt causes high blood pressure over time</li>
+                </p>
+            {% elif health_data.blood_pressure_systolic <= 139 or health_data.blood_pressure_diastolic <= 89 %}
+                <p class="sub-title"><strong>Your blood pressure is slightly elevated</strong><br>
+                    <h4>Effects of high blood pressure</h4>
+                    <li>Increase risk of Hypertension</li>
+                    <li>Increased risk of heart disease - This put strain on the arteries which could cause a heart attack</li>
+                    <li>Kidney Strain - Low periods of high blood pressure could lead to long term kidney issues</li>
+                    <h4>Ways to lower blood pressure</h4>
+                    <li>Lower salt intake - Avoid processed foods which have high sodium content</li>
+                    <li>Lose excess body weight - Losing 5 to 10 percent of body weight can lower blood pressure</li>
+                    <li>Increase fibre intake - vegetables and whole grains lead to lower cholesterol and blood pressure</li>
+                    <li>Exercise regularly - At least 30 minutes of exercise, 5 days a week is needed. This can be cycling, running or even walking</li>
+                </p>
+            {% else %}
+                <p>Your blood pressure is abnormally high. Contact your doctor immediately</p>
+            {% endif %}
+        </div>
+
+        <div class="tip">
+            <h3>Activity Level</h3>
+            {% if health_data.activity_level == 'N/A' %}
+                <p>Tip currently unavailable</p>
+            {% elif health_data.activity_level == 'low' %}
+                <p class="sub-title"><strong>Your activity level is low</strong>
+                    <h4>Effects of low activity level</h4>
+                    <li>Increased risk of weight gain and obesity</li>
+                    <li>Poor mental and physical well being</li>
+                    <li>Weakened Immune System</li>
+                    <li>Reduced Metabolism - This makes it harder to maintain a healthy weight</li>
+                    <h4>Ways to increase Activity level</h4>
+                    <li>Start strength training - Lift weights to build muscle strength</li>
+                    <li>Walk more - Aim to do at least 8000 to 10000 steps daily</li>
+                    <li>Set goals and track progress - Use fitness apps to motivate you to stick to your fitness goals</li>
+                    <li>Do small workouts - If you just started doing exercise 10 to 15 minutes of movement daily can make a massive difference</li>
+                </p>
+            {% elif health_data.activity_level == 'moderate' %}
+                <p class="sub-title"><strong>Your activity level is moderate</strong>
+                <h4>Effects of moderate activity levels</h4>
+                <li>Healthy heart and lower blood pressure</li>
+                <li>Lower risk of chronic diseases like stroke and some cancers</li>
+                <li>Stronger Immune system - Reduces risk to illnesses</li>
+                <li>Better sleep quality - Improve deep sleep and regulates sleep patterns</li>
+                <h4>Ways to maintain moderate activity level</h4>
+                <li>Try new activities - Enjoyable workouts help you stay engaged</li>
+                <li>Increase number of steps</li>
+                <li>Stay hydrated and eat well - This helps muscle recovery and motivates you to stick to it as it keeps you in shape</li>
+                <li>Monitor Progress - This helps you stay motivated and track your workouts</li>
+                </p>
+            {% else %}
+                <p class="sub-title"><strong>Your activity level is high. Good Job!!</strong>
+                <h4>Positive effects of high activity levels</h4>
+                <li>Improved athletic performance</li>
+                <li>Reduced risk of diseases - This includes diabetes, hypertension and obesity</li>
+                <li>Maximise muscle growth and strength</li>
+                <li>Increased Energy and productivity - Helps with your mental well being and work performance</li>
+                <h4>Ways to maintain this lifestyle and prevent overtraining</h4>
+                <li>Diversify workouts - Have a large range of workouts to increase strength, endurance and flexibility</li>
+                <li>Consume more protein - Helps with muscle growth and repair. These include foods like eggs, meat and chicken</li>
+                <li>Have rest days - This will help with recovery and prevent overtraining from occuring</li>
+                <li>Keep hydrated - workouts increase sweating so drink plenty of water at least 2 litres daily</li>
+                </p>   
+            {% endif %}
+        </div>
+    </div>
+</section>
+{% endif %}
+<script>
+    const addDataBtn = document.getElementById('add-data-btn');
+    const addDataModal = document.getElementById('add-data-modal');
+    const closeModal = document.getElementById('close-modal');
+    const modalForm = addDataModal.querySelector('form');
+    const successMessage = document.querySelector('.success-message');
+    const hasErrors = addDataModal.classList.contains('open');
+
+    // Open modal
+    addDataBtn.addEventListener('click', (e) => {
+        e.preventDefault();
+        addDataModal.style.display = 'block';
+        if (successMessage) {
+            successMessage.style.display = 'none';
+        }
+    });
+
+    // Close modal
+    closeModal.addEventListener('click', () => {
+        addDataModal.style.display = 'none';
+    });
+
+    window.addEventListener('click', (e) => {
+        if (e.target === addDataModal) {
+            addDataModal.style.display = 'none';
+        }
+    });
+    if (hasErrors) {
+        addDataModal.classList.add('open');
+    }
+
+    //close modal after submission
+    modalForm.addEventListener('submit', (e) => {
+        setTimeout(() => {
+            addDataModal.style.display = 'none';
+            modalForm.reset(); 
+            if (successMessage) {
+                successMessage.style.display = 'block';
+            }
+        }, 100); 
+    });
+</script>
+{% endblock %}

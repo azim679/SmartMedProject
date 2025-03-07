@@ -1,0 +1,55 @@
+{% extends "doctor_dashboard.html" %}
+{% load static %}
+
+{% block content %}
+
+<section class="appointments-section">
+    <h2>Upcoming Appointments</h2>
+    <div class="appointments-container">
+        {% if upcoming_appointments %}
+            {% for appointment in upcoming_appointments %}
+            <div class="appointment-card">
+                <div class="appointment-card-middle">
+                    <h3>Patient: {{ appointment.user.get_full_name }}</h3>
+                    <p class="schedule">Date: {{ appointment.date|date:"F j, Y" }}</p>
+                    <p class="schedule">Time: {{ appointment.start_time|time:"h:i A" }} - {{ appointment.end_time|time:"h:i A" }}</p>
+                </div>
+                <div class="appointment-card-right">
+                    {% if appointment.date == today and appointment.start_time <= now %}
+                        <!-- Show Join button if start time has arrived -->
+                        <a href="{% url 'video_call' appointment.id %}" class="join-btn">
+                            Join Appointment
+                        </a>
+                    {% endif %}
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <p>No upcoming appointments.</p>
+        {% endif %}
+    </div>
+</section>
+
+<section class="appointments-section">
+    <h2>Past Appointments</h2>
+    <div class="appointments-container">
+        {% if past_appointments %}
+            {% for appointment in past_appointments %}
+            <div class="appointment-card">
+                <div class="appointment-card-middle">
+                    <h3>Patient: {{ appointment.user.get_full_name }}</h3>
+                    <p class="schedule">Date: {{ appointment.date|date:"F j, Y" }}</p>
+                    <p class="schedule">Time: {{ appointment.start_time|time:"h:i A" }} - {{ appointment.end_time|time:"h:i A" }}</p>
+                </div>
+                <div class="appointment-card-right">
+                    <span class="status past">COMPLETED</span>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+        <p>No past appointments.</p>
+        {% endif %}
+    </div>
+</section>
+
+{% endblock %}

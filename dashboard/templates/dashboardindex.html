@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    {% load static %}
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Dashboard{% endblock %}</title>
+    {%block head%}<link rel="stylesheet" href="{% static 'css/dashboard.css' %}">{%endblock%}
+</head>
+<body>
+    <div class="main-container">
+        <nav class="sidebar">
+            <div class="sidebar-logo">
+                <h2>
+                    <img src="{% static 'images/whitelogo.png' %}" alt="SmartMed Logo" class="logo">
+                    SmartMed
+                </h2>
+            </div>
+            <ul class="sidebar-links">
+                <li><a href="{% url 'dashboard' %}">Dashboard</a></li>
+                <li><a href="{% url 'appointments' %}">Appointments</a></li>
+                <li><a href="{% url 'prescriptions' %}">View Prescriptions</a></li>
+                <li><a href="{% url 'trackhealth' %}">Track Health</a></li>
+            </ul>
+            <div class="sidebar-logout">
+                <form action="{% url 'logout' %}" method="post">
+                    {% csrf_token %}
+                    <button type="submit" class="logout-button">Logout</button>
+                </form>
+            </div>
+        </nav>
+
+        <div class="content">
+            <header class="dashboard-header">
+                <h1>Welcome, {{ user.username|capfirst }}</h1>
+            </header>
+            {% block content %}
+            {% endblock %}
+        </div>
+    </div>
+</body>
+</html>

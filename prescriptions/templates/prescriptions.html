@@ -1,0 +1,29 @@
+{% extends "dashboardindex.html" %}
+{% block title %}Prescriptions{% endblock %}
+{%load static%}
+{%block head%}<link rel="stylesheet" href="{% static 'css/prescription.css' %}">{%endblock%}
+{% block content %}
+<section class="prescriptions-section">
+    <h2 class="section-title">My Prescriptions</h2>
+    <div class="prescriptions-container">
+        {% if prescriptions %}
+            {% for prescription in prescriptions %}
+            <div class="prescription-card">
+                <div class="prescription-card-left">
+                    <img src="{% static 'images/doctor1.jpg' %}" alt="Prescription Image">
+                </div>
+                <div class="prescription-card-middle">
+                    <h3>{{ prescription.name }}</h3>
+                    <p class="doctor-name">Prescribed by {{ prescription.doctor.username|capfirst }}</p>
+                    <p class="prescription-reason">Reason: {{ prescription.reason }}</p>
+                    <p class="prescription-date">Date Added: {{ prescription.created_at|date:"F j, Y H:i" }}</p>
+                </div>
+            </div>
+            {% endfor %}
+        {% else %}
+            <p class="no-prescriptions">You have no prescriptions assigned yet.</p>
+        {% endif %}
+    </div>
+</section>
+
+{% endblock %}
