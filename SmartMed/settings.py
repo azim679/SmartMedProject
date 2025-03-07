@@ -40,13 +40,11 @@ SECRET_KEY = 'django-insecure-e)359z=w#b9=b00d3dq#y+#@wcp02sj+&-9vdiw+ez3es8@rci
 DEBUG = True
 
 
-PORT = os.getenv("PORT")  
 
 ALLOWED_HOSTS = [
     "smartmedproject.onrender.com",
     "localhost",
     "127.0.0.1",
-    "0.0.0.0",  # Add this!
 ]
 
 CSRF_TRUSTED_ORIGINS = [
